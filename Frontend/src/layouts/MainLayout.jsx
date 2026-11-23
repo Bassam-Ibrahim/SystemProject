@@ -1,22 +1,41 @@
-export default function ItemCard({ item }) {
+import { Link, Outlet, useNavigate } from 'react-router-dom';
+
+export default function MainLayout() {
+  const navigate = useNavigate();
+  const token = localStorage.getItem('token');
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    navigate('/login');
+  };
+
   return (
-    <div className="bg-surface rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow">
-      <img
-        src={item.image || 'https://via.placeholder.com/300x200?text=No+Image'}
-        alt={item.title}
-        className="w-full h-48 object-cover"
-      />
-      <div className="p-4">
-        <div className="flex justify-between items-center mb-2">
-          {/* استخدام خلفيات فاتحة مع النص الغامق للـ Tags */}
-          <span className={`text-xs font-bold px-2.5 py-1 rounded-md ${item.type === 'lost' ? 'bg-danger/10 text-danger' : 'bg-success/10 text-success'}`}>
-            {item.type.toUpperCase()}
-          </span>
-          <span className="text-xs text-textSub">{item.category}</span>
+    <div className="min-h-screen bg-background">
+      <nav className="bg-white shadow-sm sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+          <Link to="/" className="text-2xl font-extrabold text-primary tracking-tight">
+            Campus Lost & Found
+          </Link>
+          <div className="flex items-center gap-6">
+            <Link to="/" className="text-textMain hover:text-primary transition-colors font-medium">Home</Link>
+            {token ? (
+              <>
+                <Link to="/profile" className="text-textMain hover:text-primary transition-colors font-medium">Profile</Link>
+                <button onClick={handleLogout} className="text-danger font-medium hover:underline">Logout</button>
+              </>
+            ) : (
+              <>
+                <Link to="/login" className="text-textMain hover:text-primary transition-colors font-medium">Login</Link>
+                <Link to="/register" className="bg-primary text-white px-4 py-2 rounded-lg font-medium hover:bg-primary-hover transition-colors">Register</Link>
+              </>
+            )}
+          </div>
         </div>
-        <h3 className="text-lg font-bold text-textMain mb-1">{item.title}</h3>
-        <p className="text-sm text-textSub line-clamp-2">{item.description}</p>
-      </div>
+      </nav>
+      <main className="max-w-7xl mx-auto px-4 py-8">
+        <Outlet />
+      </main>
     </div>
   );
 }
