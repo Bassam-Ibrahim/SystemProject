@@ -1,8 +1,12 @@
-
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import Input from '../components/Input';
-import Button from '../components/Button';
+import AuthLayout, {
+  TextField,
+  PasswordField,
+  RoleToggle,
+  FormError,
+  SubmitButton,
+} from '../components/AuthLayout';
 
 export default function Login() {
   const [formData, setFormData] = useState({
@@ -69,18 +73,13 @@ const handleSubmit = async (e) => {
 
 
   return (
-    <div className="flex justify-center items-center py-10 px-4">
-      <div className="bg-surface w-full max-w-md p-8 rounded-2xl shadow-md border border-gray-100">
-
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-primary mb-2">
-            Welcome
-          </h1>
-
-          <p className="text-textSub">
-            Login to your Campus Lost & Found account
-          </p>
-        </div>
+    <AuthLayout>
+      <h1 className="text-[28px] font-semibold leading-tight tracking-tight text-[#0c3f4d]">
+        Log in
+      </h1>
+      <p className="mt-1.5 text-[15px] text-slate-600">
+        Use your university account to report or recover items.
+      </p>
 
         <form onSubmit={handleSubmit}>
 
@@ -96,11 +95,9 @@ const handleSubmit = async (e) => {
               required
               className="border border-gray-300 p-2.5 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-primary/50 bg-white"
             >
-           
-<option value="">Select Account Type</option>
-<option value="student">Student</option>
-<option value="professor">Professor</option>
-
+            <option value="">Select Account Type</option>              <option value="student">Student</option>
+              <option value="professor">Professor</option>
+              <option value="admin">Admin</option>
             </select>
           </div>
 
@@ -113,38 +110,29 @@ const handleSubmit = async (e) => {
             placeholder="Enter your university email"
           />
 
-          <Input
-            label="Password"
-            type="password"
-            name="password"
-            value={formData.password}
-            onChange={handleChange}
-            placeholder="Enter your password"
-          />
+        <PasswordField
+          label="Password"
+          name="password"
+          value={formData.password}
+          onChange={handleChange}
+          placeholder="Enter your password"
+          autoComplete="current-password"
+        />
 
-          {error && (
-            <p className="text-danger text-sm mb-4">
-              {error}
-            </p>
-          )}
+        <FormError>{error}</FormError>
 
-          <Button type="submit" className="w-full">
-            Login
-          </Button>
+        <SubmitButton>Log in</SubmitButton>
+      </form>
 
-        </form>
-
-        <p className="text-center text-sm text-textSub mt-6">
-          Don't have an account?{' '}
-          <Link
-            to="/register"
-            className="text-primary font-semibold hover:underline"
-          >
-            Register
-          </Link>
-        </p>
-
-      </div>
-    </div>
+      <p className="mt-6 text-sm text-slate-600">
+        New here?{' '}
+        <Link
+          to="/register"
+          className="font-semibold text-[#0f4c5c] underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0f4c5c]/40"
+        >
+          Create an account
+        </Link>
+      </p>
+    </AuthLayout>
   );
 }
