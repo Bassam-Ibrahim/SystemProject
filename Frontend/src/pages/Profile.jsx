@@ -1,5 +1,9 @@
-import { useRef, useState } from 'react';
+
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+
+const API_URL = 'http://localhost:5000/api/users';
+const SERVER_URL = 'http://localhost:5000';
 
 const getSavedUser = () => {
   try {
@@ -14,52 +18,88 @@ export default function Profile() {
   const fileInputRef = useRef(null);
 
   const [user, setUser] = useState(getSavedUser);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
-  const [formData, setFormData] = useState(() => {
-    const savedUser = getSavedUser();
-
-    return {
-      fullName: savedUser?.fullName || '',
-      college: savedUser?.college || '',
-      department: savedUser?.department || '',
-      phone: savedUser?.phone || '',
-      profession: savedUser?.profession || '',
-    };
+  const [formData, setFormData] = useState({
+    fullName: '',
+    college: '',
+    department: '',
+    phone: '',
+    profession: '',
   });
 
-  const [image, setImage] = useState(
-    () => getSavedUser()?.profileImage || ''
-  );
-
+  const [image, setImage] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  if (!user) {
-    return (
-      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4">
-        <h2 className="text-xl font-bold text-[#0c3f4d]">
-          Please log in to view your profile
-        </h2>
+  // Load profile from backend
+  useEffect(() => {
+    const fetchProfile = async () => {
+      const token = localStorage.getItem('token');
 
-        <button
-          onClick={() => navigate('/login')}
-          className="rounded-lg bg-[#0f4c5c] px-6 py-3 font-semibold text-white"
-        >
-          Go to Login
-        </button>
-      </div>
-    );
-  }
+      if (!token) {
+        navigate('/login');
+        return;
+      }
 
-  const isStudent = user.accountType === 'student';
-  const isStaff = user.accountType === 'staff';
-  const isAdmin = user.accountType === 'admin';
+      try {
+        const response = await fetch(`${API_URL}/profile`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(result.message || 'Failed to load profile');
+        }
+
+        const profile = result.user;
+
+        setUser(profile);
+
+        setFormData({
+          fullName: profile.fullName || '',
+          college: profile.college || '',
+          department: profile.department || '',
+          phone: profile.phone || '',
+          profession: profile.profession || '',
+        });
+
+        setImage(
+          profile.profileImage
+            ? `${SERVER_URL}${profile.profileImage}`
+            : ''
+        );
+
+        // Keep local user information synchronized
+        const savedUser = getSavedUser() || {};
+        localStorage.setItem(
+          'user',
+          JSON.stringify({ ...savedUser, ...profile })
+        );
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProfile();
+  }, [navigate]);
+
+  const isStudent = user?.accountType === 'student';
+  const isStaff = user?.accountType === 'staff';
+  const isAdmin = user?.accountType === 'admin';
 
   const accountLabel = {
     student: 'Student',
     staff: 'University Staff',
     admin: 'System Administrator',
-  }[user.accountType] || 'User';
+  }[user?.accountType] || 'User';
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -73,56 +113,136 @@ export default function Profile() {
     setError('');
   };
 
-  const handleImageChange = (e) => {
+  // Upload image to backend
+  const handleImageChange = async (e) => {
     const file = e.target.files?.[0];
 
     if (!file) return;
 
-    if (!file.type.startsWith('image/')) {
-      setError('Please select a valid image.');
+    const allowedTypes = [
+      'image/jpeg',
+      'image/png',
+      'image/webp',
+    ];
+
+    if (!allowedTypes.includes(file.type)) {
+      setError('Please select a JPG, PNG, or WEBP image.');
+      e.target.value = '';
       return;
     }
 
-    if (file.size > 1024 * 1024) {
-      setError('Image size must be less than 1 MB.');
+    if (file.size > 5 * 1024 * 1024) {
+      setError('Image size must not exceed 5 MB.');
+      e.target.value = '';
       return;
     }
 
-    const reader = new FileReader();
+    const token = localStorage.getItem('token');
+    const imageData = new FormData();
 
-    reader.onload = () => {
-      setImage(reader.result);
-      setError('');
-      setSuccess('Photo selected. Click Save Changes to keep it.');
-    };
+    imageData.append('profileImage', file);
 
-    reader.onerror = () => {
-      setError('Could not read the selected image.');
-    };
-
-    reader.readAsDataURL(file);
-  };
-
-  const handleSave = (e) => {
-    e.preventDefault();
+    setUploading(true);
+    setError('');
+    setSuccess('');
 
     try {
+      const response = await fetch(`${API_URL}/profile/image`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: imageData,
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || 'Image upload failed');
+      }
+
+      const imagePath = result.profileImage;
+      const imageUrl = `${SERVER_URL}${imagePath}`;
+
+      setImage(imageUrl);
+
       const updatedUser = {
         ...user,
-        ...formData,
-        profileImage: image,
+        profileImage: imagePath,
       };
 
-      localStorage.setItem('user', JSON.stringify(updatedUser));
-
       setUser(updatedUser);
-      setSuccess('Your profile has been updated successfully!');
-      setError('');
-    } catch {
-      setError('Unable to save changes. Try using a smaller image.');
+
+      const savedUser = getSavedUser() || {};
+      localStorage.setItem(
+        'user',
+        JSON.stringify({
+          ...savedUser,
+          profileImage: imagePath,
+        })
+      );
+
+      setSuccess('Profile picture uploaded successfully!');
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setUploading(false);
+      e.target.value = '';
     }
   };
 
+  // Save profile information to MongoDB
+  const handleSave = async (e) => {
+    e.preventDefault();
+
+    const token = localStorage.getItem('token');
+
+    setSaving(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      const response = await fetch(`${API_URL}/profile`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || 'Failed to update profile');
+      }
+
+      const updatedUser = {
+        ...user,
+        ...result.user,
+      };
+
+      setUser(updatedUser);
+
+      const savedUser = getSavedUser() || {};
+
+      localStorage.setItem(
+        'user',
+        JSON.stringify({
+          ...savedUser,
+          ...result.user,
+        })
+      );
+
+      setSuccess('Your profile has been updated successfully!');
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Cancel unsaved changes
   const handleCancel = () => {
     setFormData({
       fullName: user.fullName || '',
@@ -132,7 +252,12 @@ export default function Profile() {
       profession: user.profession || '',
     });
 
-    setImage(user.profileImage || '');
+    setImage(
+      user.profileImage
+        ? `${SERVER_URL}${user.profileImage}`
+        : ''
+    );
+
     setError('');
     setSuccess('');
   };
@@ -142,6 +267,31 @@ export default function Profile() {
 
   const labelClass =
     'mb-2 block text-sm font-semibold text-slate-700';
+
+  if (loading) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center text-[#0c3f4d]">
+        Loading profile...
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4">
+        <h2 className="text-xl font-bold text-[#0c3f4d]">
+          {error || 'Please log in to view your profile'}
+        </h2>
+
+        <button
+          onClick={() => navigate('/login')}
+          className="rounded-lg bg-[#0f4c5c] px-6 py-3 font-semibold text-white"
+        >
+          Go to Login
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto max-w-5xl py-6">
@@ -206,15 +356,16 @@ export default function Profile() {
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="mb-1 rounded-xl border border-[#0f4c5c] px-5 py-2.5 text-sm font-semibold text-[#0f4c5c] transition hover:bg-[#0f4c5c] hover:text-white"
+              disabled={uploading}
+              className="mb-1 rounded-xl border border-[#0f4c5c] px-5 py-2.5 text-sm font-semibold text-[#0f4c5c] transition hover:bg-[#0f4c5c] hover:text-white disabled:opacity-50"
             >
-              Change Photo
+              {uploading ? 'Uploading...' : 'Change Photo'}
             </button>
 
             <input
               ref={fileInputRef}
               type="file"
-              accept="image/*"
+              accept="image/jpeg,image/png,image/webp"
               onChange={handleImageChange}
               className="hidden"
             />
@@ -454,16 +605,18 @@ export default function Profile() {
               <button
                 type="button"
                 onClick={handleCancel}
-                className="rounded-xl border border-slate-300 px-6 py-3 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
+                disabled={saving || uploading}
+                className="rounded-xl border border-slate-300 px-6 py-3 text-sm font-semibold text-slate-600 transition hover:bg-slate-50 disabled:opacity-50"
               >
                 Cancel
               </button>
 
               <button
                 type="submit"
-                className="rounded-xl bg-[#0f4c5c] px-7 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#0c3f4d]"
+                disabled={saving || uploading}
+                className="rounded-xl bg-[#0f4c5c] px-7 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#0c3f4d] disabled:opacity-50"
               >
-                Save Changes
+                {saving ? 'Saving...' : 'Save Changes'}
               </button>
 
             </div>
@@ -472,7 +625,7 @@ export default function Profile() {
       </div>
 
       <p className="mt-4 text-center text-xs text-slate-400">
-        Profile changes are currently saved in this browser only.
+        Profile changes are saved to your account.
       </p>
 
     </div>

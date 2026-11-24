@@ -1,9 +1,13 @@
+
 const User = require("../models/User");
+const fs = require("fs");
+const path = require("path");
 
 // GET CURRENT USER PROFILE
 const getProfile = async (req, res) => {
   try {
-    const user = await User.findById(req.user.userId);
+    const user = await User.findById(req.user.userId)
+      .select("+nationalId");
 
     if (!user) {
       return res.status(404).json({
@@ -19,6 +23,7 @@ const getProfile = async (req, res) => {
         fullName: user.fullName,
         email: user.email,
         accountType: user.accountType,
+        nationalId: user.nationalId,
         college: user.college,
         department: user.department,
         phone: user.phone,
@@ -41,7 +46,13 @@ const getProfile = async (req, res) => {
 // UPDATE CURRENT USER PROFILE
 const updateProfile = async (req, res) => {
   try {
-    const { fullName, college, department, phone, profession } = req.body;
+    const {
+      fullName,
+      college,
+      department,
+      phone,
+      profession,
+    } = req.body;
 
     const user = await User.findById(req.user.userId);
 
@@ -52,8 +63,12 @@ const updateProfile = async (req, res) => {
       });
     }
 
+    // Update Full Name
     if (fullName !== undefined) {
-      if (typeof fullName !== "string" || fullName.trim().length < 2) {
+      if (
+        typeof fullName !== "string" ||
+        fullName.trim().length < 2
+      ) {
         return res.status(400).json({
           success: false,
           message: "Invalid full name",
@@ -63,7 +78,8 @@ const updateProfile = async (req, res) => {
       user.fullName = fullName.trim();
     }
 
-    if (college !== undefined) {
+    // Update College
+    if (college !== undefined && user.accountType !== "admin") {
       if (typeof college !== "string" || !college.trim()) {
         return res.status(400).json({
           success: false,
@@ -74,7 +90,8 @@ const updateProfile = async (req, res) => {
       user.college = college.trim();
     }
 
-    if (department !== undefined) {
+    // Update Department
+    if (department !== undefined && user.accountType !== "admin") {
       if (typeof department !== "string" || !department.trim()) {
         return res.status(400).json({
           success: false,
@@ -85,7 +102,8 @@ const updateProfile = async (req, res) => {
       user.department = department.trim();
     }
 
-    if (phone !== undefined) {
+    // Update Phone
+    if (phone !== undefined && user.accountType !== "admin") {
       if (
         typeof phone !== "string" ||
         !/^[+0-9\s()-]{7,20}$/.test(phone.trim())
@@ -99,15 +117,12 @@ const updateProfile = async (req, res) => {
       user.phone = phone.trim();
     }
 
-    if (profession !== undefined) {
-      if (user.accountType !== "staff") {
-        return res.status(403).json({
-          success: false,
-          message: "Only staff members can update profession",
-        });
-      }
-
-      if (typeof profession !== "string" || profession.trim().length < 2) {
+    // Update Profession (Staff Only)
+    if (profession !== undefined && user.accountType === "staff") {
+      if (
+        typeof profession !== "string" ||
+        profession.trim().length < 2
+      ) {
         return res.status(400).json({
           success: false,
           message: "Invalid profession",
@@ -158,15 +173,37 @@ const uploadProfileImage = async (req, res) => {
     const user = await User.findById(req.user.userId);
 
     if (!user) {
+      // Remove uploaded file if user doesn't exist
+      fs.unlink(req.file.path, () => {});
+
       return res.status(404).json({
         success: false,
         message: "User not found",
       });
     }
 
+    const oldImage = user.profileImage;
+
     user.profileImage = `/uploads/profiles/${req.file.filename}`;
 
     await user.save();
+
+    // Delete previous profile image after successful save
+    if (oldImage && oldImage.startsWith("/uploads/profiles/")) {
+      const oldImagePath = path.join(
+        __dirname,
+        "../../uploads/profiles",
+        path.basename(oldImage)
+      );
+
+      if (fs.existsSync(oldImagePath)) {
+        fs.unlink(oldImagePath, (error) => {
+          if (error) {
+            console.error("Old profile image deletion error:", error.message);
+          }
+        });
+      }
+    }
 
     return res.status(200).json({
       success: true,
@@ -180,6 +217,10 @@ const uploadProfileImage = async (req, res) => {
     });
   } catch (error) {
     console.error("Upload profile image error:", error.message);
+
+    if (req.file) {
+      fs.unlink(req.file.path, () => {});
+    }
 
     return res.status(500).json({
       success: false,
