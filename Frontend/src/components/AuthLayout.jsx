@@ -83,7 +83,7 @@ export default function AuthLayout({ children }) {
         </div>
 
         <p className="text-sm text-white/60">
-          For students and staff with a university email.
+          For students and professors with a university email.
         </p>
       </aside>
 
@@ -189,7 +189,7 @@ export function PasswordField({
 export function RoleToggle({ value, onChange }) {
   const options = [
     { value: 'student', label: 'Student' },
-    { value: 'staff', label: 'Staff' },
+    { value: 'professor', label: 'Professor' },
   ];
 
   return (

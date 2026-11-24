@@ -1,19 +1,33 @@
 const jwt = require('jsonwebtoken');
-const { errorResponse } = require('../utils/apiResponse');
+const User = require('../models/User');
 
 const protect = async (req, res, next) => {
-  let token;
-  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
-    try {
-      token = req.headers.authorization.split(' ')[1];
-      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret123');
-      req.user = decoded; // بيحتوي على id و role
-      next();
-    } catch (error) {
-      return errorResponse(res, "Not authorized, token failed", 401);
+  try {
+    const [scheme, token] = (req.headers.authorization || '').split(' ');
+
+    if (scheme !== 'Bearer' || !token) {
+      return res.status(401).json({ message: 'Not authorized' });
     }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.userId);
+
+    if (!user || (user.status && user.status !== 'active')) {
+      return res.status(401).json({ message: 'Not authorized' });
+    }
+
+    req.user = user;
+    next();
+  } catch (error) {
+    return res.status(401).json({ message: 'Not authorized' });
   }
-  if (!token) return errorResponse(res, "Not authorized, no token", 401);
 };
 
-module.exports = { protect };
+const adminOnly = (req, res, next) => {
+  if (req.user && req.user.accountType === 'admin') {
+    return next();
+  }
+  return res.status(403).json({ message: 'Admin access only' });
+};
+
+module.exports = { protect, adminOnly };
