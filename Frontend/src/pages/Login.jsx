@@ -28,49 +28,11 @@ export default function Login() {
     setError('');
   };
 
- 
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  setError('');
+  const handleSubmit = (e) => {
+    e.preventDefault();
 
-  try {
-    const response = await fetch(
-      'http://localhost:5000/api/auth/login',
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: formData.email,
-          password: formData.password,
-          accountType: formData.role,
-        }),
-      }
-    );
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      setError(data.message || 'Login failed');
-      return;
-    }
-
-    // Save authentication token
-    localStorage.setItem('token', data.token);
-
-    // Save user information
-    localStorage.setItem('user', JSON.stringify(data.user));
-
-    alert('Login successful!');
-
-    // Navigation can be added here after agreeing on the dashboard route.
-
-  } catch (error) {
-    setError('Cannot connect to server. Please try again.');
-  }
-};
-
+    setError('Login is not connected to the server yet.');
+  };
 
   return (
     <AuthLayout>
@@ -81,34 +43,18 @@ const handleSubmit = async (e) => {
         Use your university account to report or recover items.
       </p>
 
-        <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} className="mt-6 space-y-4 [@media(max-height:720px)]:mt-4 [@media(max-height:720px)]:space-y-3">
+        <RoleToggle value={formData.role} onChange={handleChange} />
 
-          <div className="flex flex-col gap-1 mb-4 w-full">
-            <label className="text-sm font-semibold text-textMain">
-              Account Type
-            </label>
-
-            <select
-              name="role"
-              value={formData.role}
-              onChange={handleChange}
-              required
-              className="border border-gray-300 p-2.5 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-primary/50 bg-white"
-            >
-            <option value="">Select Account Type</option>              <option value="student">Student</option>
-              <option value="staff">Staff</option>
-              <option value="admin">Admin</option>
-            </select>
-          </div>
-
-          <Input
-            label="University Email"
-            type="email"
-            name="email"
-            value={formData.email}
-            onChange={handleChange}
-            placeholder="Enter your university email"
-          />
+        <TextField
+          label="University email"
+          name="email"
+          type="email"
+          value={formData.email}
+          onChange={handleChange}
+          placeholder="name@university.edu"
+          autoComplete="email"
+        />
 
         <PasswordField
           label="Password"

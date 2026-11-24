@@ -30,90 +30,37 @@ export default function Register() {
     setError('');
   };
 
- 
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  setError('');
+  const handleSubmit = (e) => {
+    e.preventDefault();
 
     if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
+      setError('Passwords do not match. Check both fields and try again.');
       return;
     }
 
-  try {
-    const response = await fetch(
-      'http://localhost:5000/api/auth/register',
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          fullName: formData.fullName,
-          email: formData.email,
-          password: formData.password,
-          confirmPassword: formData.confirmPassword,
-          accountType: formData.role,
-        }),
-      }
-    );
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      setError(data.message || 'Registration failed');
-      return;
-    }
-
-    alert('Account created successfully!');
-
-  } catch (error) {
-    setError('Cannot connect to server');
-  }
-};
-
+    setError('Registration is not connected to the server yet.');
+  };
 
   return (
-    <div className="flex justify-center items-center py-10 px-4">
-      <div className="bg-surface w-full max-w-md p-8 rounded-2xl shadow-md border border-gray-100">
+    <AuthLayout>
+      <h1 className="text-[28px] font-semibold leading-tight tracking-tight text-[#0c3f4d]">
+        Create your account
+      </h1>
+      <p className="mt-1.5 text-[15px] text-slate-600">
+        Sign up with your university email to get started.
+      </p>
 
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-primary mb-2">
-            Create Account
-          </h1>
-          <p className="text-textSub">
-            Join Campus Lost & Found
-          </p>
-        </div>
+      <form onSubmit={handleSubmit} className="mt-6 space-y-4 [@media(max-height:720px)]:mt-4 [@media(max-height:720px)]:space-y-3">
+        <RoleToggle value={formData.role} onChange={handleChange} />
 
-        <form onSubmit={handleSubmit}>
-
-          <div className="flex flex-col gap-1 mb-4 w-full">
-            <label className="text-sm font-semibold text-textMain">
-              Account Type
-            </label>
-
-            <select
-              name="role"
-              value={formData.role}
-              onChange={handleChange}
-              required
-              className="border border-gray-300 p-2.5 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-primary/50 bg-white"
-            >
-              <option value="">Select Account Type</option>
-              <option value="student">Student</option>
-              <option value="staff">Staff</option>
-              <option value="admin">Admin</option>
-            </select>
-          </div>
-
-          <Input
-            label="Full Name"
-            name="fullName"
-            value={formData.fullName}
-            onChange={handleChange}
-            placeholder="Enter your full name"
-          />
+        <TextField
+          label="Full name"
+          name="fullName"
+          value={formData.fullName}
+          onChange={handleChange}
+          placeholder="Your full name"
+          autoComplete="name"
+        />
 
         <TextField
           label="University email"
