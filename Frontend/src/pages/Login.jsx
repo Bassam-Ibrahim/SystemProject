@@ -1,37 +1,93 @@
+
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+
 import AuthLayout, {
   TextField,
   PasswordField,
-  RoleToggle,
   FormError,
   SubmitButton,
 } from '../components/AuthLayout';
 
 export default function Login() {
+  const navigate = useNavigate();
+
   const [formData, setFormData] = useState({
-    role: '',
     email: '',
     password: '',
   });
 
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
 
-    setFormData({
-      ...formData,
+    setFormData((previous) => ({
+      ...previous,
       [name]: value,
-    });
+    }));
 
     setError('');
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
 
-    setError('Login is not connected to the server yet.');
+    try {
+      setLoading(true);
+
+      const response = await fetch(
+        'http://localhost:5000/api/auth/login',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email: formData.email,
+            password: formData.password,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.message || 'Login failed. Please try again.');
+        return;
+      }
+
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify(data.user));
+
+      const dashboardRoutes = {
+        student: '/student/dashboard',
+        staff: '/staff/dashboard',
+        admin: '/admin/dashboard',
+      };
+
+      const dashboard = dashboardRoutes[data.user.accountType];
+
+      if (!dashboard) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        setError('Unknown account type.');
+        return;
+      }
+
+      navigate(dashboard, { replace: true });
+
+    } catch (err) {
+      console.error('Login error:', err);
+
+      setError(
+        'Cannot connect to the server. Make sure the backend is running.'
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -39,13 +95,15 @@ export default function Login() {
       <h1 className="text-[28px] font-semibold leading-tight tracking-tight text-[#0c3f4d]">
         Log in
       </h1>
+
       <p className="mt-1.5 text-[15px] text-slate-600">
         Use your university account to report or recover items.
       </p>
 
-      <form onSubmit={handleSubmit} className="mt-6 space-y-4 [@media(max-height:720px)]:mt-4 [@media(max-height:720px)]:space-y-3">
-        <RoleToggle value={formData.role} onChange={handleChange} />
-
+      <form
+        onSubmit={handleSubmit}
+        className="mt-6 space-y-4 [@media(max-height:720px)]:mt-4 [@media(max-height:720px)]:space-y-3"
+      >
         <TextField
           label="University email"
           name="email"
@@ -67,7 +125,9 @@ export default function Login() {
 
         <FormError>{error}</FormError>
 
-        <SubmitButton>Log in</SubmitButton>
+        <SubmitButton>
+          {loading ? 'Logging in...' : 'Log in'}
+        </SubmitButton>
       </form>
 
       <p className="mt-6 text-sm text-slate-600">

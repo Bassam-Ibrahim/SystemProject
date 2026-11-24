@@ -1,17 +1,26 @@
-const express = require('express');
-const { protect, adminOnly } = require('../middleware/auth');
-const {
-  listPendingWorkers,
-  approveWorker,
-  rejectWorker,
-} = require('../controllers/adminController');
 
+const express = require("express");
 const router = express.Router();
 
-router.use(protect, adminOnly);
+const {
+  getPendingUsers,
+  approveUser,
+  rejectUser,
+} = require("../controllers/adminController");
 
-router.get('/pending-workers', listPendingWorkers);
-router.patch('/users/:id/approve', approveWorker);
-router.patch('/users/:id/reject', rejectWorker);
+const { protect } = require("../middleware/authMiddleware");
+const { authorize } = require("../middleware/roleMiddleware");
+
+// All routes require an authenticated Admin
+router.use(protect, authorize("admin"));
+
+// Get pending registration requests
+router.get("/pending-users", getPendingUsers);
+
+// Approve a user
+router.patch("/users/:id/approve", approveUser);
+
+// Reject a user
+router.patch("/users/:id/reject", rejectUser);
 
 module.exports = router;

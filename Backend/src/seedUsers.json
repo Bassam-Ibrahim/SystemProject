@@ -1,0 +1,23 @@
+
+[
+  {
+    "fullName": "Test Student",
+    "email": "student2@std.cu.edu.eg",
+    "password": "Test12345",
+    "accountType": "student",
+    "nationalId": "12345678901234",
+    "college": "Faculty of Science",
+    "department": "Mathematics",
+    "phone": "01012345678"
+  },
+  {
+    "fullName": "Test Staff",
+    "email": "staff2@cu.edu.eg",
+    "password": "Test12345",
+    "accountType": "staff",
+    "profession": "Teaching Assistant",
+    "college": "Faculty of Science",
+    "department": "Mathematics",
+    "phone": "01012345678"
+  }
+]

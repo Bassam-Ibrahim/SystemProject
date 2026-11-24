@@ -186,29 +186,35 @@ export function PasswordField({
   );
 }
 
-export function RoleToggle({ value, onChange }) {
-  const options = [
-    { value: 'student', label: 'Student' },
-    { value: 'professor', label: 'Professor' },
-  ];
+
+export function RoleToggle({ value, onChange, allowAdmin = false  }) {
+const options = [
+  { value: 'student', label: 'Student' },
+  { value: 'staff', label: 'Staff' },
+  ...(allowAdmin ? [{ value: 'admin', label: 'Admin' }] : []),
+];
 
   return (
     <fieldset>
-      <legend className="mb-1.5 text-[15px] font-medium text-slate-800">Account type</legend>
-      <div className="grid grid-cols-2 gap-1 rounded-lg bg-slate-100 p-1">
-        {options.map((o) => (
-          <label key={o.value} className="relative block">
+      <legend className="mb-1.5 text-[15px] font-medium text-slate-800">
+        Account type
+      </legend>
+
+      <div className="grid grid-cols-3 gap-1 rounded-lg bg-slate-100 p-1">
+        {options.map((option) => (
+          <label key={option.value} className="relative block">
             <input
               type="radio"
               name="role"
-              value={o.value}
-              checked={value === o.value}
+              value={option.value}
+              checked={value === option.value}
               onChange={onChange}
               required
               className="peer sr-only"
             />
-            <span className="block cursor-pointer rounded-md py-2.5 text-center text-[15px] font-medium text-slate-600 transition-colors peer-checked:bg-white peer-checked:text-[#0f4c5c] peer-checked:shadow-sm peer-focus-visible:ring-2 peer-focus-visible:ring-[#0f4c5c]/40">
-              {o.label}
+
+            <span className="block cursor-pointer rounded-md py-2.5 text-center text-sm font-medium text-slate-600 transition-colors peer-checked:bg-white peer-checked:text-[#0f4c5c] peer-checked:shadow-sm peer-focus-visible:ring-2 peer-focus-visible:ring-[#0f4c5c]/40">
+              {option.label}
             </span>
           </label>
         ))}
@@ -216,6 +222,7 @@ export function RoleToggle({ value, onChange }) {
     </fieldset>
   );
 }
+
 
 export function FormError({ children }) {
   if (!children) return null;

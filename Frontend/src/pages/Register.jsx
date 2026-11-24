@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+
 import AuthLayout, {
   TextField,
   PasswordField,
@@ -13,6 +14,11 @@ export default function Register() {
     role: '',
     fullName: '',
     email: '',
+    nationalId: '',
+    profession: '',
+    college: '',
+    department: '',
+    phone: '',
     password: '',
     confirmPassword: '',
   });
@@ -22,10 +28,10 @@ export default function Register() {
   const handleChange = (e) => {
     const { name, value } = e.target;
 
-    setFormData({
-      ...formData,
+    setFormData((prev) => ({
+      ...prev,
       [name]: value,
-    });
+    }));
 
     setError('');
   };
@@ -33,8 +39,18 @@ export default function Register() {
   const handleSubmit = (e) => {
     e.preventDefault();
 
+    if (!formData.role) {
+      setError('Please select your account type.');
+      return;
+    }
+
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match. Check both fields and try again.');
+      return;
+    }
+
+    if (formData.role === 'student' && !/^\d{14}$/.test(formData.nationalId)) {
+      setError('National ID must contain exactly 14 digits.');
       return;
     }
 
@@ -46,11 +62,15 @@ export default function Register() {
       <h1 className="text-[28px] font-semibold leading-tight tracking-tight text-[#0c3f4d]">
         Create your account
       </h1>
+
       <p className="mt-1.5 text-[15px] text-slate-600">
         Sign up with your university email to get started.
       </p>
 
-      <form onSubmit={handleSubmit} className="mt-6 space-y-4 [@media(max-height:720px)]:mt-4 [@media(max-height:720px)]:space-y-3">
+      <form
+        onSubmit={handleSubmit}
+        className="mt-6 space-y-4 [@media(max-height:720px)]:mt-4 [@media(max-height:720px)]:space-y-3"
+      >
         <RoleToggle value={formData.role} onChange={handleChange} />
 
         <TextField
@@ -68,8 +88,59 @@ export default function Register() {
           type="email"
           value={formData.email}
           onChange={handleChange}
-          placeholder="name@university.edu"
+          placeholder={
+            formData.role === 'student'
+              ? 'name@std.cu.edu.eg'
+              : 'name@cu.edu.eg'
+          }
           autoComplete="email"
+        />
+
+        {formData.role === 'student' && (
+          <TextField
+            label="National ID"
+            name="nationalId"
+            value={formData.nationalId}
+            onChange={handleChange}
+            placeholder="Enter your 14-digit national ID"
+            hint="Enter 14 digits."
+          />
+        )}
+
+        {formData.role === 'staff' && (
+          <TextField
+            label="Profession"
+            name="profession"
+            value={formData.profession}
+            onChange={handleChange}
+            placeholder="e.g. Professor, Teaching Assistant"
+          />
+        )}
+
+        <TextField
+          label="College"
+          name="college"
+          value={formData.college}
+          onChange={handleChange}
+          placeholder="Enter your college"
+        />
+
+        <TextField
+          label="Department"
+          name="department"
+          value={formData.department}
+          onChange={handleChange}
+          placeholder="Enter your department"
+        />
+
+        <TextField
+          label="Mobile number"
+          name="phone"
+          type="tel"
+          value={formData.phone}
+          onChange={handleChange}
+          placeholder="01xxxxxxxxx"
+          autoComplete="tel"
         />
 
         <PasswordField
