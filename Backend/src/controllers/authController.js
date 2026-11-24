@@ -41,7 +41,7 @@ const register = async (req, res) => {
         }
 
         // Validate account type
-        if (!["professor", "student"].includes(accountType)) {
+        if (!["staff", "student"].includes(accountType)) {
             return res.status(400).json({
                 message: "Invalid account type"
             });
@@ -59,23 +59,23 @@ const register = async (req, res) => {
             });
         }
 
-        // Validate professor email
+        // Validate staff email
         if (
-            accountType === "professor" &&
-            !normalizedEmail.endsWith("@sci.cu.edu.eg")
+            accountType === "staff" &&
+            !normalizedEmail.endsWith("@cu.edu.eg")
         ) {
             return res.status(400).json({
-                message: "Professor email must end with @sci.cu.edu.eg"
+                message: "staff email must end with @cu.edu.eg"
             });
         }
 
         // Validate student email
         if (
             accountType === "student" &&
-            !normalizedEmail.endsWith("@std.sci.cu.edu.eg")
+            !normalizedEmail.endsWith("@std.cu.edu.eg")
         ) {
             return res.status(400).json({
-                message: "Student email must end with @std.sci.cu.edu.eg"
+                message: "Student email must end with @std.cu.edu.eg"
             });
         }
 
@@ -166,7 +166,7 @@ const login = async (req, res) => {
         }
 
         // Validate account type
-        if (!["professor", "student"].includes(accountType)) {
+        if (!["staff", "student"].includes(accountType)) {
             return res.status(400).json({
                 message: "Invalid account type"
             });
@@ -185,11 +185,11 @@ const login = async (req, res) => {
 
         // Validate email domain
         if (
-            accountType === "professor" &&
+            accountType === "staff" &&
             !normalizedEmail.endsWith("@cu.edu.eg")
         ) {
             return res.status(400).json({
-                message: "Professor email must end with @cu.edu.eg"
+                message: "Staff email must end with @cu.edu.eg"
             });
         }
 

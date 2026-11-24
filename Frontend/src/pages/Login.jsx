@@ -96,7 +96,7 @@ const handleSubmit = async (e) => {
               className="border border-gray-300 p-2.5 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-primary/50 bg-white"
             >
             <option value="">Select Account Type</option>              <option value="student">Student</option>
-              <option value="professor">Professor</option>
+              <option value="staff">Staff</option>
               <option value="admin">Admin</option>
             </select>
           </div>

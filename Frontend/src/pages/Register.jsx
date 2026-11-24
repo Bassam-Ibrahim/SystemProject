@@ -102,7 +102,7 @@ const handleSubmit = async (e) => {
             >
               <option value="">Select Account Type</option>
               <option value="student">Student</option>
-              <option value="professor">Professor</option>
+              <option value="staff">Staff</option>
               <option value="admin">Admin</option>
             </select>
           </div>
