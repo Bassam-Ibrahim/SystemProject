@@ -1,7 +1,12 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import Input from '../components/Input';
-import Button from '../components/Button';
+import AuthLayout, {
+  TextField,
+  PasswordField,
+  RoleToggle,
+  FormError,
+  SubmitButton,
+} from '../components/AuthLayout';
 
 export default function Register() {
   const [formData, setFormData] = useState({
@@ -29,7 +34,7 @@ export default function Register() {
     e.preventDefault();
 
     if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
+      setError('Passwords do not match. Check both fields and try again.');
       return;
     }
 
@@ -37,113 +42,68 @@ export default function Register() {
   };
 
   return (
-    <div className="relative min-h-screen flex justify-center items-center py-10 px-4 overflow-hidden bg-gradient-to-br from-[#0c3f4d] via-[#0f5a66] to-[#177480]">
-      {/* Decorative background shapes */}
-      <div className="pointer-events-none absolute -top-24 -left-24 w-80 h-80 rounded-full border border-white/10" />
-      <div className="pointer-events-none absolute -top-10 -left-10 w-56 h-56 rounded-full border border-white/10" />
-      <div className="pointer-events-none absolute top-1/3 -right-32 w-96 h-96 rounded-full bg-white/5" />
-      <div className="pointer-events-none absolute -bottom-32 left-1/4 w-[28rem] h-[28rem] rounded-full border border-white/10" />
-      <div className="pointer-events-none absolute -bottom-20 left-[30%] w-72 h-72 rounded-full border border-white/10" />
-      <div className="pointer-events-none absolute bottom-10 right-10 w-40 h-40 rounded-full bg-white/5" />
+    <AuthLayout>
+      <h1 className="text-[28px] font-semibold leading-tight tracking-tight text-[#0c3f4d]">
+        Create your account
+      </h1>
+      <p className="mt-1.5 text-[15px] text-slate-600">
+        Sign up with your university email to get started.
+      </p>
 
-      {/* Register card */}
-      <div className="relative bg-white w-full max-w-md p-8 rounded-2xl shadow-2xl">
+      <form onSubmit={handleSubmit} className="mt-6 space-y-4 [@media(max-height:720px)]:mt-4 [@media(max-height:720px)]:space-y-3">
+        <RoleToggle value={formData.role} onChange={handleChange} />
 
-        <div className="text-center mb-6">
-          <div className="text-4xl mb-1">🎓📍</div>
-          <p className="text-lg font-bold text-[#0f4c5c] leading-tight">
-            Campus Lost &amp; Found
-          </p>
+        <TextField
+          label="Full name"
+          name="fullName"
+          value={formData.fullName}
+          onChange={handleChange}
+          placeholder="Your full name"
+          autoComplete="name"
+        />
 
-          <h1 className="text-3xl font-bold text-[#0c3f4d] mt-4 mb-1">
-            Create Account
-          </h1>
-          <p className="text-gray-600 text-sm">
-            Join Campus Lost &amp; Found
-          </p>
-        </div>
+        <TextField
+          label="University email"
+          name="email"
+          type="email"
+          value={formData.email}
+          onChange={handleChange}
+          placeholder="name@university.edu"
+          autoComplete="email"
+        />
 
-        <form onSubmit={handleSubmit}>
+        <PasswordField
+          label="Password"
+          name="password"
+          value={formData.password}
+          onChange={handleChange}
+          placeholder="Create a password"
+          autoComplete="new-password"
+        />
 
-          <div className="flex flex-col gap-1 mb-4 w-full">
-            <label className="text-sm font-semibold text-gray-800">
-              Account Type
-            </label>
+        <PasswordField
+          label="Confirm password"
+          name="confirmPassword"
+          value={formData.confirmPassword}
+          onChange={handleChange}
+          placeholder="Re-enter your password"
+          autoComplete="new-password"
+        />
 
-            <select
-              name="role"
-              value={formData.role}
-              onChange={handleChange}
-              required
-              className="border border-gray-300 p-3 rounded-xl w-full bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#0f5a66]/40"
-            >
-              <option value="">Select Account Type</option>
-              <option value="student">Student</option>
-              <option value="professor">Professor</option>
-            </select>
-          </div>
+        <FormError>{error}</FormError>
 
-          <Input
-            label="Full Name"
-            name="fullName"
-            value={formData.fullName}
-            onChange={handleChange}
-            placeholder="Enter your full name"
-          />
+        <SubmitButton>Create account</SubmitButton>
+      </form>
 
-          <Input
-            label="University Email"
-            type="email"
-            name="email"
-            value={formData.email}
-            onChange={handleChange}
-            placeholder="Enter your university email"
-          />
-
-          <Input
-            label="Password"
-            type="password"
-            name="password"
-            value={formData.password}
-            onChange={handleChange}
-            placeholder="Enter your password"
-          />
-
-          <Input
-            label="Confirm Password"
-            type="password"
-            name="confirmPassword"
-            value={formData.confirmPassword}
-            onChange={handleChange}
-            placeholder="Confirm your password"
-          />
-
-          {error && (
-            <p className="text-danger text-sm mb-4">
-              {error}
-            </p>
-          )}
-
-          <Button
-            type="submit"
-            className="w-full !rounded-full !py-3 !bg-[#0f4c5c] hover:!bg-[#0c3f4d]"
-          >
-            Create Account
-          </Button>
-
-        </form>
-
-        <p className="text-center text-sm text-gray-600 mt-6">
-          Already have an account?{' '}
-          <Link
-            to="/login"
-            className="text-[#0f4c5c] font-semibold hover:underline"
-          >
-            Login
-          </Link>
-        </p>
-
-      </div>
-    </div>
+      <p className="mt-6 text-sm text-slate-600">
+        Already have an account?{' '}
+        <Link
+          to="/login"
+          className="font-semibold text-[#0f4c5c] underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0f4c5c]/40"
+        >
+          Log in
+        </Link>
+      </p>
+    </AuthLayout>
   );
 }
