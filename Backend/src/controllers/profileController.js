@@ -1,4 +1,3 @@
-
 const User = require("../models/User");
 
 // GET CURRENT USER PROFILE
@@ -25,6 +24,7 @@ const getProfile = async (req, res) => {
         phone: user.phone,
         profession: user.profession,
         status: user.status,
+        profileImage: user.profileImage,
         createdAt: user.createdAt,
       },
     });
@@ -132,6 +132,7 @@ const updateProfile = async (req, res) => {
         phone: user.phone,
         profession: user.profession,
         status: user.status,
+        profileImage: user.profileImage,
       },
     });
   } catch (error) {
@@ -144,7 +145,51 @@ const updateProfile = async (req, res) => {
   }
 };
 
+// UPLOAD PROFILE IMAGE
+const uploadProfileImage = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: "Please select an image",
+      });
+    }
+
+    const user = await User.findById(req.user.userId);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    user.profileImage = `/uploads/profiles/${req.file.filename}`;
+
+    await user.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Profile image uploaded successfully",
+      profileImage: user.profileImage,
+      user: {
+        id: user._id,
+        fullName: user.fullName,
+        profileImage: user.profileImage,
+      },
+    });
+  } catch (error) {
+    console.error("Upload profile image error:", error.message);
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
 module.exports = {
   getProfile,
   updateProfile,
+  uploadProfileImage,
 };

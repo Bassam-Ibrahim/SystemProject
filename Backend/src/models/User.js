@@ -1,4 +1,3 @@
-
 const mongoose = require("mongoose");
 
 const userSchema = new mongoose.Schema(
@@ -71,6 +70,12 @@ const userSchema = new mongoose.Schema(
         return this.accountType === "student" || this.accountType === "staff";
       },
       trim: true,
+    },
+
+    // Profile Picture
+    profileImage: {
+      type: String,
+      default: null,
     },
 
     status: {
