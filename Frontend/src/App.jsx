@@ -1,4 +1,3 @@
-
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 
 import MainLayout from './layouts/MainLayout';
@@ -7,6 +6,7 @@ import ProtectedRoute from './routes/ProtectedRoute';
 import Register from './pages/Register';
 import Login from './pages/Login';
 import Homepage from './pages/Homepage';
+import Profile from './pages/Profile';
 
 function HomePageRoute() {
   const token = localStorage.getItem('token');
@@ -38,7 +38,18 @@ function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Login />} />
 
-          {/* Student */}
+          {/* Profile - Student, Staff and Admin */}
+          <Route
+            element={
+              <ProtectedRoute
+                allowedRoles={['student', 'staff', 'admin']}
+              />
+            }
+          >
+            <Route path="/profile" element={<Profile />} />
+          </Route>
+
+          {/* Student Dashboard */}
           <Route element={<ProtectedRoute allowedRoles={['student']} />}>
             <Route
               path="/student/dashboard"
@@ -46,7 +57,7 @@ function App() {
             />
           </Route>
 
-          {/* Staff */}
+          {/* Staff Dashboard */}
           <Route element={<ProtectedRoute allowedRoles={['staff']} />}>
             <Route
               path="/staff/dashboard"
@@ -54,7 +65,7 @@ function App() {
             />
           </Route>
 
-          {/* Admin */}
+          {/* Admin Dashboard */}
           <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
             <Route
               path="/admin/dashboard"
