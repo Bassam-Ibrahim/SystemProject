@@ -186,19 +186,19 @@ const login = async (req, res) => {
         // Validate email domain
         if (
             accountType === "professor" &&
-            !normalizedEmail.endsWith("@sci.cu.edu.eg")
+            !normalizedEmail.endsWith("@cu.edu.eg")
         ) {
             return res.status(400).json({
-                message: "Professor email must end with @sci.cu.edu.eg"
+                message: "Professor email must end with @cu.edu.eg"
             });
         }
 
         if (
             accountType === "student" &&
-            !normalizedEmail.endsWith("@std.sci.cu.edu.eg")
+            !normalizedEmail.endsWith("@std.cu.edu.eg")
         ) {
             return res.status(400).json({
-                message: "Student email must end with @std.sci.cu.edu.eg"
+                message: "Student email must end with @std.cu.edu.eg"
             });
         }
 
