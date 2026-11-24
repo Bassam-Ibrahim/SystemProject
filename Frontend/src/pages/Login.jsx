@@ -24,11 +24,49 @@ export default function Login() {
     setError('');
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+ 
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setError('');
 
-    setError('Login is not connected to the server yet.');
-  };
+  try {
+    const response = await fetch(
+      'http://localhost:5000/api/auth/login',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+          accountType: formData.role,
+        }),
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      setError(data.message || 'Login failed');
+      return;
+    }
+
+    // Save authentication token
+    localStorage.setItem('token', data.token);
+
+    // Save user information
+    localStorage.setItem('user', JSON.stringify(data.user));
+
+    alert('Login successful!');
+
+    // Navigation can be added here after agreeing on the dashboard route.
+
+  } catch (error) {
+    setError('Cannot connect to server. Please try again.');
+  }
+};
+
 
   return (
     <div className="flex justify-center items-center py-10 px-4">
@@ -58,9 +96,11 @@ export default function Login() {
               required
               className="border border-gray-300 p-2.5 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-primary/50 bg-white"
             >
-            <option value="">Select Account Type</option>              <option value="student">Student</option>
-              <option value="professor">Professor</option>
-              <option value="admin">Admin</option>
+           
+<option value="">Select Account Type</option>
+<option value="student">Student</option>
+<option value="professor">Professor</option>
+
             </select>
           </div>
 

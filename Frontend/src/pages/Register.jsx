@@ -26,16 +26,48 @@ export default function Register() {
     setError('');
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+ 
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setError('');
 
-    if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
+  if (formData.password !== formData.confirmPassword) {
+    setError('Passwords do not match');
+    return;
+  }
+
+  try {
+    const response = await fetch(
+      'http://localhost:5000/api/auth/register',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          fullName: formData.fullName,
+          email: formData.email,
+          password: formData.password,
+          confirmPassword: formData.confirmPassword,
+          accountType: formData.role,
+        }),
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      setError(data.message || 'Registration failed');
       return;
     }
 
-    setError('Registration is not connected to the server yet.');
-  };
+    alert('Account created successfully!');
+
+  } catch (error) {
+    setError('Cannot connect to server');
+  }
+};
+
 
   return (
     <div className="flex justify-center items-center py-10 px-4">
@@ -67,7 +99,6 @@ export default function Register() {
               <option value="">Select Account Type</option>
               <option value="student">Student</option>
               <option value="professor">Professor</option>
-              <option value="admin">Admin</option>
             </select>
           </div>
 
