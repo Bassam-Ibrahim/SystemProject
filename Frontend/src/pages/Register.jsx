@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 
@@ -8,6 +9,8 @@ import AuthLayout, {
   FormError,
   SubmitButton,
 } from '../components/AuthLayout';
+
+const API_URL = 'http://localhost:5000/api/auth';
 
 export default function Register() {
   const [formData, setFormData] = useState({
@@ -24,6 +27,8 @@ export default function Register() {
   });
 
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -34,10 +39,13 @@ export default function Register() {
     }));
 
     setError('');
+    setSuccess('');
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (isSubmitting) return;
 
     if (!formData.role) {
       setError('Please select your account type.');
@@ -54,7 +62,80 @@ export default function Register() {
       return;
     }
 
-    setError('Registration is not connected to the server yet.');
+    if (formData.role === 'student' && !formData.email.toLowerCase().endsWith('@std.cu.edu.eg')) {
+      setError('Students must use their university student email.');
+      return;
+    }
+
+    if (formData.role === 'staff' && !formData.email.toLowerCase().endsWith('@cu.edu.eg')) {
+      setError('Staff members must use their university email.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      const registrationData = {
+  fullName: formData.fullName.trim(),
+  email: formData.email.trim().toLowerCase(),
+  password: formData.password,
+  confirmPassword: formData.confirmPassword,
+  accountType: formData.role,
+  college: formData.college.trim(),
+  department: formData.department.trim(),
+  phone: formData.phone.trim(),
+};
+
+      if (formData.role === 'student') {
+        registrationData.nationalId = formData.nationalId.trim();
+      }
+
+      if (formData.role === 'staff') {
+        registrationData.profession = formData.profession.trim();
+      }
+
+      const response = await fetch(`${API_URL}/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(registrationData),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || 'Registration failed.');
+      }
+
+      setSuccess(
+        result.message || 'Your account has been created successfully. Please wait for account approval.'
+      );
+
+      setFormData({
+        role: '',
+        fullName: '',
+        email: '',
+        nationalId: '',
+        profession: '',
+        college: '',
+        department: '',
+        phone: '',
+        password: '',
+        confirmPassword: '',
+      });
+
+    } catch (err) {
+      setError(
+        err.message === 'Failed to fetch'
+          ? 'Cannot connect to the server. Please make sure the backend is running.'
+          : err.message
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -163,7 +244,15 @@ export default function Register() {
 
         <FormError>{error}</FormError>
 
-        <SubmitButton>Create account</SubmitButton>
+        {success && (
+          <div className="rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+            {success}
+          </div>
+        )}
+
+        <SubmitButton>
+          {isSubmitting ? 'Creating account...' : 'Create account'}
+        </SubmitButton>
       </form>
 
       <p className="mt-6 text-sm text-slate-600">
