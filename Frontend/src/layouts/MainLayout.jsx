@@ -1,34 +1,62 @@
 import { useEffect, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { Logo } from '../components/AuthLayout';
+import ThemeToggle from '../components/ThemeToggle';
+import { useItems } from '../context/ItemsContext';
+import { initTheme } from '../utils/theme';
+import '../darkMode.css';
+
+initTheme();
 
 const FONT =
   "'Public Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif";
 
-// Desktop link: teal + underline on the current page
 const desktopLink = ({ isActive }) =>
-  `relative flex h-full items-center text-[15px] font-medium transition-colors after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 ${
+  `relative flex h-full items-center gap-1.5 text-[15px] font-medium transition-colors after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 ${
     isActive
       ? 'text-[#0f4c5c] after:bg-[#0f4c5c]'
       : 'text-slate-600 after:bg-transparent hover:text-[#0f4c5c]'
   }`;
 
-// Mobile link
 const mobileLink = ({ isActive }) =>
-  `block rounded-lg px-3 py-2.5 text-[15px] font-medium transition-colors ${
+  `flex items-center justify-between rounded-lg px-3 py-2.5 text-[15px] font-medium transition-colors ${
     isActive ? 'bg-slate-100 text-[#0f4c5c]' : 'text-slate-700 hover:bg-slate-50'
   }`;
 
 const focusRing =
   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0f4c5c]/40';
 
+const DASHBOARD_PATHS = {
+  student: '/student/dashboard',
+  staff: '/staff/dashboard',
+};
+
+const getUser = () => {
+  try {
+    return JSON.parse(localStorage.getItem('user') || 'null');
+  } catch {
+    return null;
+  }
+};
+
+function Badge({ count }) {
+  if (!count) return null;
+  return (
+    <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-[#e8a23a] px-1.5 text-xs font-semibold text-[#2b1d03]">
+      {count}
+    </span>
+  );
+}
+
 export default function MainLayout() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { selectedIds } = useItems();
   const token = localStorage.getItem('token');
+  const user = getUser();
+  const dashboardPath = DASHBOARD_PATHS[user?.accountType];
   const [menuOpen, setMenuOpen] = useState(false);
 
-  // close the mobile menu whenever the page changes
   useEffect(() => {
     setMenuOpen(false);
   }, [location.pathname]);
@@ -51,13 +79,30 @@ export default function MainLayout() {
           </Link>
 
           {/* Desktop */}
-          <div className="hidden h-full items-center gap-8 md:flex">
+          <div className="hidden h-full items-center gap-5 md:flex">
             <NavLink to="/" end className={desktopLink}>
               Home
             </NavLink>
 
             {token ? (
               <>
+                {dashboardPath && (
+                  <>
+                    <NavLink to={dashboardPath} className={desktopLink}>
+                      Dashboard
+                    </NavLink>
+                    <NavLink to="/items" end className={desktopLink}>
+                      Items
+                    </NavLink>
+                    <NavLink to="/cart" className={desktopLink}>
+                      Selected
+                      <Badge count={selectedIds.length} />
+                    </NavLink>
+                    <NavLink to="/reviews" className={desktopLink}>
+                      Reviews
+                    </NavLink>
+                  </>
+                )}
                 <NavLink to="/profile" className={desktopLink}>
                   Profile
                 </NavLink>
@@ -81,25 +126,30 @@ export default function MainLayout() {
                 </Link>
               </>
             )}
+
+            <ThemeToggle />
           </div>
 
-          {/* Mobile toggle */}
-          <button
-            type="button"
-            onClick={() => setMenuOpen((o) => !o)}
-            aria-label={menuOpen ? 'Close menu' : 'Open menu'}
-            aria-expanded={menuOpen}
-            aria-controls="mobile-menu"
-            className={`flex h-10 w-10 items-center justify-center rounded-lg text-slate-700 hover:bg-slate-100 md:hidden ${focusRing}`}
-          >
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              {menuOpen ? (
-                <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-              ) : (
-                <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-              )}
-            </svg>
-          </button>
+          {/* Mobile: theme toggle + menu toggle */}
+          <div className="flex items-center gap-1 md:hidden">
+            <ThemeToggle />
+            <button
+              type="button"
+              onClick={() => setMenuOpen((o) => !o)}
+              aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+              aria-expanded={menuOpen}
+              aria-controls="mobile-menu"
+              className={`flex h-10 w-10 items-center justify-center rounded-lg text-slate-700 hover:bg-slate-100 ${focusRing}`}
+            >
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                {menuOpen ? (
+                  <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                ) : (
+                  <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                )}
+              </svg>
+            </button>
+          </div>
         </div>
 
         {/* Mobile menu */}
@@ -111,6 +161,23 @@ export default function MainLayout() {
 
             {token ? (
               <>
+                {dashboardPath && (
+                  <>
+                    <NavLink to={dashboardPath} className={mobileLink}>
+                      Dashboard
+                    </NavLink>
+                    <NavLink to="/items" end className={mobileLink}>
+                      Items
+                    </NavLink>
+                    <NavLink to="/cart" className={mobileLink}>
+                      Selected
+                      <Badge count={selectedIds.length} />
+                    </NavLink>
+                    <NavLink to="/reviews" className={mobileLink}>
+                      Reviews
+                    </NavLink>
+                  </>
+                )}
                 <NavLink to="/profile" className={mobileLink}>
                   Profile
                 </NavLink>
